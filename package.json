@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.4.7",
+    "fs-extra": "^11.3.0",
+    "spotify-web-api-node": "^5.0.2",
+    "ytsr": "^3.8.4"
   }
 }

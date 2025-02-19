@@ -2,9 +2,10 @@ require("dotenv").config();
 const spotifyWebApi = require("spotify-web-api-node");
 const ytsr = require("ytsr");
 const { exec } = require("fs-extra");
-const path = require("path");
-const os = require("os");
+const fs = require("fs-extra");
+const downloadsPath = require("./downloads_path");
 const SpotifyWebApi = require("spotify-web-api-node");
+const { fstat } = require("fs");
 
 const spotifyApi = new SpotifyWebApi({
   clientId: process.env.SPOTIFY_CLIENT_ID,
@@ -12,39 +13,14 @@ const spotifyApi = new SpotifyWebApi({
   redirecturl: "http://localhost:8888/callback",
 });
 
-let downloadsFolder = path.join(os.homedir(), "Downloads");
+let outputFolder = downloadsPath;
 
-const isWSL = () => {
+const authenticateSpotify = async () => {
   try {
-    return fs
-      .readFileSync("/proc/version", "utf8")
-      .toLowerCase()
-      .includes("microsoft");
-  } catch (e) {
-    return false;
-  }
-};
-
-const getWindowsHomeInWSL = () => {
-  try {
-    return execSync("cmd.exe /c echo %USERPROFILE%")
-      .toString()
-      .trim()
-      .replace(/\\/g, "/");
+    const data = await spotifyApi.clientCredentialsGrant();
+    console.log(data.body);
+    spotifyApi.setAccessToken(data.body["access_token"]);
   } catch (err) {
-    console.log("Error getting windows home directory:", err);
-    return null;
+    console.error("Error authenticating with Spotify", err);
   }
 };
-
-if (isWSL()) {
-  const winHome = getWindowsHomeInWSL();
-  if (winHome) {
-    downloadsFolder = path.join("/mnt/c", winHome.substring(3), "Downloads");
-  } else {
-    console.error("Failed to determine Windows home directory.");
-    process.exit(1);
-  }
-} else {
-  downloadsFolder = path.join(os.homedir(), "Downloads");
-}
